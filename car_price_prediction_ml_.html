@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APEX VALUATION // Automotive AI Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-obsidian: #090A0F;
+            --card-surface: rgba(18, 20, 29, 0.78);
+            --gold-primary: #F59E0B;
+            --gold-glow: rgba(245, 158, 11, 0.35);
+            --cyan-accent: #38BDF8;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-obsidian);
+            color: #F8FAFC;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(245, 158, 11, 0.08) 0%, transparent 45%),
+                radial-gradient(circle at 85% 80%, rgba(56, 189, 248, 0.07) 0%, transparent 45%),
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+        }
+        .font-display { font-family: 'Space Grotesk', sans-serif; }
+        .font-mono-tech { font-family: 'JetBrains Mono', monospace; }
+
+        /* Glass Cockpit Panel */
+        .cockpit-panel {
+            background: var(--card-surface);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        }
+
+        /* Custom Automotive Range Slider */
+        input[type="range"].auto-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            background: #1E2230;
+            border-radius: 999px;
+            outline: none;
+        }
+        input[type="range"].auto-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FBBF24, #D97706);
+            cursor: pointer;
+            border: 2px solid #090A0F;
+            box-shadow: 0 0 14px var(--gold-glow);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        input[type="range"].auto-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.18);
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.65);
+        }
+        input[type="range"].auto-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FBBF24, #D97706);
+            cursor: pointer;
+            border: 2px solid #090A0F;
+            box-shadow: 0 0 14px var(--gold-glow);
+        }
+
+        /* Gauge SVG Arc Transition */
+        #gauge-arc {
+            transition: stroke-dashoffset 0.85s cubic-bezier(0.22, 1, 0.36, 1), stroke 0.5s ease;
+        }
+
+        /* Shimmer Button */
+        .btn-ignition {
+            background: linear-gradient(135deg, #F59E0B 0%, #EA580C 100%);
+            box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.45);
+            transition: all 0.2s ease;
+        }
+        .btn-ignition:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 14px 30px -4px rgba(245, 158, 11, 0.65);
+        }
+        .btn-ignition:active {
+            transform: translateY(1px) scale(0.99);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 17, 26, 0.6); }
+        ::-webkit-scrollbar-thumb { background: #2D3348; border-radius: 99px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-amber-500/30 selection:text-amber-200">
+
+    <!-- Top Automotive HUD Header -->
+    <header class="border-b border-white/[0.07] bg-[#0B0D14]/85 backdrop-blur-md sticky top-0 z-30">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/20 text-slate-950">
+                    <!-- Custom Automotive Speedometer SVG Icon -->
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 14l4-4"/>
+                        <path d="M3.34 19a10 10 0 1 1 17.32 0"/>
+                        <circle cx="12" cy="14" r="2"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="font-display font-bold text-lg tracking-wide text-white">APEX<span class="text-amber-400">VALUATE</span></h1>
+                        <span class="hidden sm:inline-block text-[10px] font-mono-tech uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/25">ML STUDIO</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 font-mono-tech">Model: car model,linear.pkl • scikit-learn 1.6.1</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3">
+                <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/[0.07] text-xs text-slate-300">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>Manual Inference Mode</span>
+                </div>
+                <button onclick="resetForm()" class="px-3.5 py-2 rounded-xl text-xs font-medium text-slate-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] transition flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                    <span>Reset</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Cockpit Workspace -->
+    <main class="max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-10 flex-1">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+            <!-- LEFT COLUMN: Telemetry Input Controls (7 Cols) -->
+            <section class="lg:col-span-7 cockpit-panel rounded-3xl p-5 sm:p-8 space-y-6">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.07] pb-4">
+                    <div>
+                        <span class="text-[11px] font-mono-tech uppercase tracking-widest text-amber-400">Step 01 // Vehicle Telemetry</span>
+                        <h2 class="font-display text-xl sm:text-2xl font-bold text-white mt-0.5">Configure Vehicle Specs</h2>
+                    </div>
+
+                    <!-- Quick Garage Presets -->
+                    <div class="flex items-center gap-1.5 bg-[#0D0F17] p-1 rounded-xl border border-white/[0.07]">
+                        <button type="button" onclick="applyPreset(6.5, 2021, 28000, 'Hatchback')" class="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-amber-300 hover:bg-white/[0.06] transition">Hatchback</button>
+                        <button type="button" onclick="applyPreset(12.8, 2020, 42000, 'Sedan')" class="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-amber-300 hover:bg-white/[0.06] transition">Sedan</button>
+                        <button type="button" onclick="applyPreset(22.5, 2022, 19500, 'Luxury SUV')" class="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-amber-300 hover:bg-white/[0.06] transition">SUV</button>
+                    </div>
+                </div>
+
+                <!-- Input 1: Present_Price -->
+                <div class="p-4 sm:p-5 rounded-2xl bg-[#0D0F17]/90 border border-white/[0.06] hover:border-amber-500/30 transition space-y-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <label for="price-input" class="flex items-center gap-2.5">
+                            <span class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 font-mono-tech text-xs font-bold">₹</span>
+                            <div>
+                                <span class="block text-sm font-semibold text-white">Present Showroom Price</span>
+                                <span class="block text-[11px] font-mono-tech text-slate-400">feature: Present_Price (Lakhs)</span>
+                            </div>
+                        </label>
+                        <div class="flex items-center bg-[#151926] border border-white/10 rounded-xl px-3 py-1.5 focus-within:border-amber-400 transition">
+                            <span class="text-xs font-mono-tech text-amber-400 mr-1.5">₹</span>
+                            <input id="price-input" type="number" step="0.1" min="0.5" max="100" value="9.5"
+                                class="w-20 bg-transparent text-right font-mono-tech font-bold text-white text-base focus:outline-none">
+                            <span class="text-xs font-mono-tech text-slate-400 ml-1.5">L</span>
+                        </div>
+                    </div>
+                    <input id="price-slider" type="range" min="0.5" max="60" step="0.1" value="9.5" class="auto-slider">
+                    <div class="flex justify-between text-[11px] font-mono-tech text-slate-500">
+                        <span>₹0.5 L (Entry)</span>
+                        <span>₹30.0 L</span>
+                        <span>₹60.0 L (Luxury)</span>
+                    </div>
+                </div>
+
+                <!-- Input 2: Year -->
+                <div class="p-4 sm:p-5 rounded-2xl bg-[#0D0F17]/90 border border-white/[0.06] hover:border-amber-500/30 transition space-y-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <label for="year-input" class="flex items-center gap-2.5">
+                            <span class="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            </span>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm font-semibold text-white">Manufacturing Year</span>
+                                    <span id="age-badge" class="text-[10px] font-mono-tech px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-300 border border-sky-500/25">6 yrs old</span>
+                                </div>
+                                <span class="block text-[11px] font-mono-tech text-slate-400">feature: Year (2005 – 2026)</span>
+                            </div>
+                        </label>
+                        <div class="flex items-center bg-[#151926] border border-white/10 rounded-xl px-3 py-1.5 focus-within:border-amber-400 transition">
+                            <input id="year-input" type="number" step="1" min="2005" max="2026" value="2020"
+                                class="w-20 bg-transparent text-right font-mono-tech font-bold text-white text-base focus:outline-none">
+                        </div>
+                    </div>
+                    <input id="year-slider" type="range" min="2005" max="2026" step="1" value="2020" class="auto-slider">
+                    <div class="flex justify-between text-[11px] font-mono-tech text-slate-500">
+                        <span>2005</span>
+                        <span>2015</span>
+                        <span>2026 (New)</span>
+                    </div>
+                </div>
+
+                <!-- Input 3: Kms_Driven -->
+                <div class="p-4 sm:p-5 rounded-2xl bg-[#0D0F17]/90 border border-white/[0.06] hover:border-amber-500/30 transition space-y-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <label for="kms-input" class="flex items-center gap-2.5">
+                            <span class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            </span>
+                            <div>
+                                <span class="block text-sm font-semibold text-white">Odometer Reading</span>
+                                <span class="block text-[11px] font-mono-tech text-slate-400">feature: Kms_Driven (Total km)</span>
+                            </div>
+                        </label>
+                        <div class="flex items-center bg-[#151926] border border-white/10 rounded-xl px-3 py-1.5 focus-within:border-amber-400 transition">
+                            <input id="kms-input" type="number" step="500" min="0" max="500000" value="35000"
+                                class="w-24 bg-transparent text-right font-mono-tech font-bold text-white text-base focus:outline-none">
+                            <span class="text-xs font-mono-tech text-slate-400 ml-1.5">km</span>
+                        </div>
+                    </div>
+                    <input id="kms-slider" type="range" min="0" max="200000" step="500" value="35000" class="auto-slider">
+                    <div class="flex justify-between text-[11px] font-mono-tech text-slate-500">
+                        <span>0 km</span>
+                        <span>1,00,000 km</span>
+                        <span>2,00,000+ km</span>
+                    </div>
+                </div>
+
+                <!-- Primary Ignition Predict Button -->
+                <div class="pt-1">
+                    <button id="predict-btn" type="button" onclick="runPrediction()"
+                        class="btn-ignition w-full py-4 px-6 rounded-2xl font-display font-bold text-base sm:text-lg text-slate-950 tracking-wide flex items-center justify-center gap-3 cursor-pointer">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                        </svg>
+                        <span>PREDICT RESALE VALUATION</span>
+                    </button>
+                    <p id="status-hint" class="text-center text-xs text-slate-400 mt-2.5 font-mono-tech">
+                        Enter your vehicle values above and click Predict to compute valuation.
+                    </p>
+                </div>
+            </section>
+
+            <!-- RIGHT COLUMN: Digital Cockpit Gauge & Telemetry Breakdown (5 Cols) -->
+            <section class="lg:col-span-5 space-y-6">
+
+                <!-- Main Valuation Gauge Card -->
+                <div class="cockpit-panel rounded-3xl p-6 sm:p-7 relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] font-mono-tech uppercase tracking-widest text-amber-400">Step 02 // AI Output</span>
+                        <span id="prediction-badge" class="text-[11px] font-mono-tech px-2.5 py-0.5 rounded-full bg-white/[0.06] text-slate-400 border border-white/10">AWAITING INPUT</span>
+                    </div>
+
+                    <!-- Interactive SVG Speedometer Arc -->
+                    <div class="relative flex flex-col items-center justify-center my-3">
+                        <svg class="w-64 h-40 overflow-visible" viewBox="0 0 260 150">
+                            <defs>
+                                <linearGradient id="goldArcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="#38BDF8"/>
+                                    <stop offset="50%" stop-color="#F59E0B"/>
+                                    <stop offset="100%" stop-color="#10B981"/>
+                                </linearGradient>
+                            </defs>
+                            <!-- Background Track Arc -->
+                            <path d="M 25 135 A 105 105 0 0 1 235 135" fill="none" stroke="#1E2334" stroke-width="16" stroke-linecap="round"/>
+                            <!-- Active Value Arc (Total length ~330) -->
+                            <path id="gauge-arc" d="M 25 135 A 105 105 0 0 1 235 135" fill="none" stroke="url(#goldArcGrad)" stroke-width="16" stroke-linecap="round"
+                                stroke-dasharray="330" stroke-dashoffset="330"/>
+                        </svg>
+
+                        <!-- Center Digital Readout -->
+                        <div class="absolute bottom-2 text-center">
+                            <p class="text-[11px] font-mono-tech uppercase tracking-widest text-slate-400">Estimated Value</p>
+                            <div class="flex items-baseline justify-center gap-1 mt-0.5">
+                                <span class="text-xl font-display font-bold text-amber-400">₹</span>
+                                <span id="result-lakhs" class="text-4xl sm:text-5xl font-display font-bold tracking-tight text-white">--.--</span>
+                                <span class="text-sm font-mono-tech text-slate-300">Lakhs</span>
+                            </div>
+                            <p id="result-exact" class="text-xs font-mono-tech text-slate-400 mt-1">₹ --,---</p>
+                        </div>
+                    </div>
+
+                    <!-- Value Retention & Condition Metrics -->
+                    <div class="grid grid-cols-2 gap-3 mt-5 pt-5 border-t border-white/[0.07]">
+                        <div class="p-3 rounded-2xl bg-[#0D0F17]/90 border border-white/[0.06]">
+                            <span class="block text-[11px] font-mono-tech text-slate-400">Value Retention</span>
+                            <span id="retention-pct" class="block font-display font-bold text-lg text-emerald-400 mt-0.5">--%</span>
+                        </div>
+                        <div class="p-3 rounded-2xl bg-[#0D0F17]/90 border border-white/[0.06]">
+                            <span class="block text-[11px] font-mono-tech text-slate-400">Total Depreciation</span>
+                            <span id="depreciation-loss" class="block font-display font-bold text-lg text-rose-400 mt-0.5">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Telemetry Impact Breakdown -->
+                    <div class="mt-4 p-3.5 rounded-2xl bg-[#0D0F17]/70 border border-white/[0.05] space-y-2 text-xs font-mono-tech">
+                        <div class="flex justify-between text-slate-400">
+                            <span>Showroom Base Weight:</span>
+                            <span id="weight-price" class="text-slate-200">--</span>
+                        </div>
+                        <div class="flex justify-between text-slate-400">
+                            <span>Odometer Wear Impact:</span>
+                            <span id="weight-kms" class="text-rose-300">--</span>
+                        </div>
+                        <div class="flex justify-between text-slate-400">
+                            <span>Model Year Factor:</span>
+                            <span id="weight-year" class="text-sky-300">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Valuation Log -->
+                <div class="cockpit-panel rounded-3xl p-5 sm:p-6">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-display font-semibold text-sm text-white flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                            Recent Valuations
+                        </h3>
+                        <button type="button" onclick="clearHistory()" class="text-[11px] font-mono-tech text-slate-400 hover:text-rose-400 transition">Clear</button>
+                    </div>
+                    <div id="history-container" class="space-y-2 max-h-44 overflow-y-auto pr-1">
+                        <p class="text-xs text-slate-500 text-center py-5 font-mono-tech">No runs logged yet. Click Predict above.</p>
+                    </div>
+                </div>
+
+            </section>
+        </div>
+    </main>
+
+    <!-- Subtle Footer -->
+    <footer class="border-t border-white/[0.05] py-4 text-center text-[11px] font-mono-tech text-slate-500">
+        Powered by LinearRegression Weights (car model,linear.pkl) • Precision Client-Side Inference
+    </footer>
+
+    <script>
+        // Exact Coefficients & Intercept extracted from 'car model,linear.pkl'
+        // Feature order: ['Kms_Driven', 'Present_Price', 'Year']
+        const CURRENT_YEAR = 2026;
+        const MODEL_COEF = {
+            Kms_Driven: -5.57072002e-06,
+            Present_Price: 5.19039234e-01,
+            Year: 4.92217901e-01
+        };
+        const MODEL_INTERCEPT = -990.5177315659472;
+
+        let hasPredictedOnce = false;
+        let predictionHistory = [];
+
+        // DOM Elements
+        const priceInput = document.getElementById('price-input');
+        const priceSlider = document.getElementById('price-slider');
+        const yearInput = document.getElementById('year-input');
+        const yearSlider = document.getElementById('year-slider');
+        const kmsInput = document.getElementById('kms-input');
+        const kmsSlider = document.getElementById('kms-slider');
+        const ageBadge = document.getElementById('age-badge');
+        const statusHint = document.getElementById('status-hint');
+        const predictionBadge = document.getElementById('prediction-badge');
+
+        // Update car age pill without triggering prediction
+        function updateAgeBadge() {
+            const yr = parseInt(yearInput.value, 10) || CURRENT_YEAR;
+            const age = Math.max(0, CURRENT_YEAR - yr);
+            ageBadge.textContent = age === 0 ? 'Brand New' : `${age} yr${age > 1 ? 's' : ''} old`;
+        }
+
+        // Notify user if inputs changed after a previous prediction
+        function markInputsModified() {
+            updateAgeBadge();
+            if (hasPredictedOnce) {
+                predictionBadge.textContent = 'MODIFIED • RE-PREDICT';
+                predictionBadge.className = 'text-[11px] font-mono-tech px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30';
+                statusHint.textContent = 'Inputs updated — click Predict Resale Valuation to refresh.';
+                statusHint.className = 'text-center text-xs text-amber-400 mt-2.5 font-mono-tech';
+            }
+        }
+
+        // Sync number input & slider pairs cleanly
+        function bindInputPair(numEl, rangeEl) {
+            numEl.addEventListener('input', () => {
+                if (numEl.value !== '') {
+                    rangeEl.value = numEl.value;
+                }
+                markInputsModified();
+            });
+            rangeEl.addEventListener('input', () => {
+                numEl.value = rangeEl.value;
+                markInputsModified();
+            });
+        }
+
+        bindInputPair(priceInput, priceSlider);
+        bindInputPair(yearInput, yearSlider);
+        bindInputPair(kmsInput, kmsSlider);
+
+        // Quick preset loader (populates inputs only, waits for Predict click)
+        function applyPreset(price, year, kms, label) {
+            priceInput.value = price;
+            priceSlider.value = price;
+            yearInput.value = year;
+            yearSlider.value = year;
+            kmsInput.value = kms;
+            kmsSlider.value = kms;
+            markInputsModified();
+            statusHint.textContent = `Loaded ${label} preset — click Predict Resale Valuation.`;
+            statusHint.className = 'text-center text-xs text-sky-400 mt-2.5 font-mono-tech';
+        }
+
+        // Smooth number counter animation
+        function animateCounter(el, start, end, duration = 550) {
+            const startTime = performance.now();
+            function tick(now) {
+                const progress = Math.min((now - startTime) / duration, 1);
+                const ease = 1 - Math.pow(1 - progress, 3);
+                const current = start + (end - start) * ease;
+                el.textContent = current.toFixed(2);
+                if (progress < 1) requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+        }
+
+        // Core LinearRegression Inference (triggered ONLY on button click)
+        function runPrediction() {
+            const presentPrice = Math.max(0.1, parseFloat(priceInput.value) || 0);
+            const year = Math.min(2026, Math.max(1995, parseInt(yearInput.value, 10) || 2020));
+            const kmsDriven = Math.max(0, parseFloat(kmsInput.value) || 0);
+
+            // Normalize inputs back into fields
+            priceInput.value = presentPrice;
+            yearInput.value = year;
+            kmsInput.value = kmsDriven;
+            updateAgeBadge();
+
+            // Exact LinearRegression dot product: y = w1*Kms + w2*Price + w3*Year + b
+            const priceContribution = MODEL_COEF.Present_Price * presentPrice;
+            const kmsContribution = MODEL_COEF.Kms_Driven * kmsDriven;
+            const yearContribution = MODEL_COEF.Year * year + MODEL_INTERCEPT;
+
+            const rawPrediction = priceContribution + kmsContribution + yearContribution;
+            // Clamp minimum realistic scrap floor at 0.15 Lakhs
+            const predictedLakhs = Math.max(0.15, rawPrediction);
+
+            // Animate primary valuation readout
+            const resultLakhsEl = document.getElementById('result-lakhs');
+            const prevVal = parseFloat(resultLakhsEl.textContent) || 0;
+            animateCounter(resultLakhsEl, prevVal, predictedLakhs);
+
+            // Format exact Indian Rupees
+            const exactRupees = Math.round(predictedLakhs * 100000);
+            document.getElementById('result-exact').textContent = `₹ ${exactRupees.toLocaleString('en-IN')}`;
+
+            // Retention & Depreciation Stats
+            const retentionRatio = Math.min(100, Math.max(0, (predictedLakhs / presentPrice) * 100));
+            const depreciationLakhs = Math.max(0, presentPrice - predictedLakhs);
+
+            document.getElementById('retention-pct').textContent = `${retentionRatio.toFixed(1)}%`;
+            document.getElementById('depreciation-loss').textContent = `-₹${depreciationLakhs.toFixed(2)} L`;
+
+            // Update SVG Speedometer Arc (offset 330 = 0%, offset 0 = 100%)
+            const gaugeArc = document.getElementById('gauge-arc');
+            const dashOffset = 330 - (330 * (retentionRatio / 100));
+            gaugeArc.style.strokeDashoffset = dashOffset.toFixed(1);
+
+            // Telemetry Factor Breakdown
+            document.getElementById('weight-price').textContent = `+₹${priceContribution.toFixed(2)} L`;
+            document.getElementById('weight-kms').textContent = `${kmsContribution >= 0 ? '+' : '-'}₹${Math.abs(kmsContribution).toFixed(2)} L`;
+            document.getElementById('weight-year').textContent = `${yearContribution >= 0 ? '+' : '-'}₹${Math.abs(yearContribution).toFixed(2)} L`;
+
+            // Update Status Badges
+            hasPredictedOnce = true;
+            predictionBadge.textContent = 'VALUATION READY';
+            predictionBadge.className = 'text-[11px] font-mono-tech px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30';
+            statusHint.textContent = 'Valuation computed successfully using LinearRegression model.';
+            statusHint.className = 'text-center text-xs text-emerald-400 mt-2.5 font-mono-tech';
+
+            // Save to History Log
+            addHistoryItem(presentPrice, year, kmsDriven, predictedLakhs);
+        }
+
+        function addHistoryItem(price, year, kms, predicted) {
+            predictionHistory.unshift({ price, year, kms, predicted });
+            if (predictionHistory.length > 6) predictionHistory.pop();
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('history-container');
+            if (predictionHistory.length === 0) {
+                container.innerHTML = '<p class="text-xs text-slate-500 text-center py-5 font-mono-tech">No runs logged yet. Click Predict above.</p>';
+                return;
+            }
+            container.innerHTML = predictionHistory.map((item, idx) => `
+                <div class="flex items-center justify-between p-2.5 rounded-xl bg-[#0D0F17]/90 border border-white/[0.06] text-xs font-mono-tech">
+                    <div class="text-slate-300">
+                        <span class="text-amber-400 font-bold">#${predictionHistory.length - idx}</span>
+                        <span class="ml-1.5">${item.year} • ₹${item.price}L • ${(item.kms / 1000).toFixed(0)}k km</span>
+                    </div>
+                    <span class="font-bold text-emerald-400">₹${item.predicted.toFixed(2)} L</span>
+                </div>
+            `).join('');
+        }
+
+        function clearHistory() {
+            predictionHistory = [];
+            renderHistory();
+        }
+
+        function resetForm() {
+            priceInput.value = 9.5;
+            priceSlider.value = 9.5;
+            yearInput.value = 2020;
+            yearSlider.value = 2020;
+            kmsInput.value = 35000;
+            kmsSlider.value = 35000;
+            hasPredictedOnce = false;
+            updateAgeBadge();
+
+            document.getElementById('result-lakhs').textContent = '--.--';
+            document.getElementById('result-exact').textContent = '₹ --,---';
+            document.getElementById('retention-pct').textContent = '--%';
+            document.getElementById('depreciation-loss').textContent = '--';
+            document.getElementById('weight-price').textContent = '--';
+            document.getElementById('weight-kms').textContent = '--';
+            document.getElementById('weight-year').textContent = '--';
+            document.getElementById('gauge-arc').style.strokeDashoffset = '330';
+
+            predictionBadge.textContent = 'AWAITING INPUT';
+            predictionBadge.className = 'text-[11px] font-mono-tech px-2.5 py-0.5 rounded-full bg-white/[0.06] text-slate-400 border border-white/10';
+            statusHint.textContent = 'Enter your vehicle values above and click Predict to compute valuation.';
+            statusHint.className = 'text-center text-xs text-slate-400 mt-2.5 font-mono-tech';
+        }
+
+        // Initialize badge on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            updateAgeBadge();
+        });
+    </script>
+</body>
+</html>
